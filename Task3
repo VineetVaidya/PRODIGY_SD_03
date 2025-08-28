@@ -1,0 +1,60 @@
+#include <iostream>
+#include <vector>
+#include <utility>
+#include <cstring>
+
+using namespace std;
+
+struct SudokuSolver {
+    int g[9][9]{};                 
+    int rowMask[9]{}, colMask[9]{}, boxMask[9]{};
+    vector<pair<int, int>> empties;
+
+    static int boxId(int r, int c) { return (r / 3) * 3 + (c / 3); }
+
+    static int popcount_u(unsigned x) {
+        int c = 0;
+        while (x) { x &= (x - 1U); ++c; }  
+        return c;
+    }
+    static int ctz_u(unsigned x) {          
+        int n = 0;
+        while ((x & 1U) == 0U) { x >>= 1U; ++n; }
+        return n;
+    }
+
+    bool parse(istream& in) {
+        vector<int> vals; vals.reserve(81);
+        char ch;
+        while (in.get(ch)) {
+            if (ch == '.' || ch == '0') vals.push_back(0);
+            else if (ch >= '1' && ch <= '9') vals.push_back(ch - '0');
+            if ((int)vals.size() == 81) break;
+        }
+        if ((int)vals.size() != 81) return false;
+
+        memset(rowMask, 0, sizeof(rowMask));
+        memset(colMask, 0, sizeof(colMask));
+        memset(boxMask, 0, sizeof(boxMask));
+        empties.clear();
+
+        for (int r = 0, k = 0; r < 9; ++r) {
+            for (int c = 0; c < 9; ++c, ++k) {
+                int v = vals[k];
+                g[r][c] = v;
+                if (v == 0) {
+                    empties.emplace_back(r, c);
+                }
+                else {
+                    int b = boxId(r, c);
+                    int bit = 1 << (v - 1);
+                    if ((rowMask[r] & bit) || (colMask[c] & bit) || (boxMask[b] & bit))
+                        return false; 
+                    rowMask[r] |= bit;
+                    colMask[c] |= bit;
+                    boxMask[b] |= bit;
+                }
+            }
+        }
+        return true;
+    }
