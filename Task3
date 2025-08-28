@@ -122,3 +122,20 @@ struct SudokuSolver {
         }
     }
 };
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    SudokuSolver s;
+    if (!s.parse(cin)) {
+        cerr << "Input error: provide 9x9 Sudoku with digits (1-9) and 0 or '.' for blanks.\n";
+        return 1;
+    }
+    if (!s.solve()) {
+        cerr << "No solution exists for the given puzzle.\n";
+        return 2;
+    }
+    s.print(cout);
+    return 0;
+}
