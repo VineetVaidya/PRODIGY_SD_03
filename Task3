@@ -58,3 +58,67 @@ struct SudokuSolver {
         }
         return true;
     }
+
+    inline int candidatesMask(int r, int c) const {
+        int used = rowMask[r] | colMask[c] | boxMask[boxId(r, c)];
+        return (~used) & 0x1FF;
+    }
+
+    int selectNextIndex() const {
+        int bestIdx = -1, bestCount = 10;
+        for (int i = 0; i < (int)empties.size(); ++i) {
+            int r = empties[i].first, c = empties[i].second;
+            if (g[r][c] != 0) continue;
+            int mask = candidatesMask(r, c);
+            int cnt = popcount_u((unsigned)mask);
+            if (cnt < bestCount) {
+                bestCount = cnt;
+                bestIdx = i;
+                if (cnt == 1) break;
+            }
+        }
+        return bestIdx;
+    }
+
+    bool dfs() {
+        int pick = selectNextIndex();
+        if (pick == -1) return true; 
+
+        int r = empties[pick].first;
+        int c = empties[pick].second;
+
+        int mask = candidatesMask(r, c);
+        if (mask == 0) return false;
+
+        while (mask) {
+            int bit = mask & -mask;         
+            mask -= bit;
+            int v = ctz_u((unsigned)bit) + 1;
+
+            g[r][c] = v;
+            rowMask[r] |= bit;
+            colMask[c] |= bit;
+            boxMask[boxId(r, c)] |= bit;
+
+            if (dfs()) return true;
+
+            g[r][c] = 0;
+            rowMask[r] ^= bit;
+            colMask[c] ^= bit;
+            boxMask[boxId(r, c)] ^= bit;
+        }
+        return false;
+    }
+
+    bool solve() { return dfs(); }
+
+    void print(ostream& out) const {
+        for (int r = 0; r < 9; ++r) {
+            for (int c = 0; c < 9; ++c) {
+                out << g[r][c];
+                if (c < 8) out << ' ';
+            }
+            out << '\n';
+        }
+    }
+};
